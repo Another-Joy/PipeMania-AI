@@ -36,11 +36,9 @@ class Board:
     """Representação interna de um tabuleiro de PipeMania."""
 
 
-    def __init__(self, width, height, start, end, grid):
+    def __init__(self, width, height, grid):
         self.width = width
         self.height = height
-        self.start = start
-        self.end = end
         self.grid = grid
 
     def get_value(self, row: int, col: int) -> str:
@@ -65,20 +63,16 @@ class Board:
         """Lê a instância do problema do standard input (stdin) e retorna uma instância da classe Board."""
         input_lines = sys.stdin.read().strip().split('\n')
         
-        # Primeira linha contém a largura e altura
-        width, height = map(int, input_lines[0].split())
-        
-        # Segunda linha contém as coordenadas de início
-        start = tuple(map(int, input_lines[1].split()))
-        
-        # Terceira linha contém as coordenadas de fim
-        end = tuple(map(int, input_lines[2].split()))
+
         
         # As linhas subsequentes contêm o grid
-        grid = [list(line.strip()) for line in input_lines[3:]]
+        grid = [list(line.split("\t").strip() for line in input_lines]
+        
+                # Primeira linha contém a largura e altura
+        width, height = len(grid[0]), len(grid)
         
         # Cria e retorna uma instância de Board
-        return Board(width, height, start, end, grid)
+        return Board(width, height, grid)
 
     # TODO: outros metodos da classe
 
