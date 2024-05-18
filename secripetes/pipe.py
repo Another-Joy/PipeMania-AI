@@ -42,21 +42,20 @@ class Board:
         self.grid = grid
 
     def get_value(self, row: int, col: int) -> str:
-        """Devolve o valor na respetiva posição do tabuleiro."""
-        # TODO
-        pass
+        try:
+            return self.grid[row][col]
+        except:
+            return None
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
-        # TODO
-        pass
+        return  (self.get_value(row-1, col), self.get_value(row+1, col))
 
     def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        # TODO
-        pass
+        return  (self.get_value(row, col-1), self.get_value(row, col+1))
 
     @staticmethod
     def parse_instance():
@@ -66,9 +65,8 @@ class Board:
 
         
         # As linhas subsequentes contêm o grid
-        grid = [list(line.split("\t").strip() for line in input_lines]
+        grid = [list(line.split("\t").strip()) for line in input_lines]
         
-                # Primeira linha contém a largura e altura
         width, height = len(grid[0]), len(grid)
         
         # Cria e retorna uma instância de Board
@@ -83,11 +81,23 @@ class PipeMania(Problem):
         # TODO
         pass
 
+
+    def possible_moves(piece):
+        """Retorna uma lista de todas as rotações possiveis da peça e que não inclui o estado atual da peça"""
+        #TODO
+        pass
+        
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        # TODO
-        pass
+        
+        actions = []
+        for x in len(state.board):
+            for y in len(state.board[x]):
+                for move in possible_moves(state.board[x][y]):
+                    actions.append((x, y, move))
+
+        return actions
 
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
