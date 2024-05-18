@@ -35,6 +35,12 @@ class PipeManiaState:
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
 
+
+    def __init__(self, width, height, grid):
+        self.width = width
+        self.height = height
+        self.grid = grid
+
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         # TODO
@@ -54,17 +60,19 @@ class Board:
 
     @staticmethod
     def parse_instance():
-        """Lê o test do standard input (stdin) que é passado como argumento
-        e retorna uma instância da classe Board.
+        """Lê a instância do problema do standard input (stdin) e retorna uma instância da classe Board."""
+        input_lines = sys.stdin.read().strip().split('\n')
+        
 
-        Por exemplo:
-            $ python3 pipe.py < test-01.txt
-
-            > from sys import stdin
-            > line = stdin.readline().split()
-        """
-        # TODO
-        pass
+        
+        # As linhas subsequentes contêm o grid
+        grid = [list(line.split("\t").strip() for line in input_lines]
+        
+                # Primeira linha contém a largura e altura
+        width, height = len(grid[0]), len(grid)
+        
+        # Cria e retorna uma instância de Board
+        return Board(width, height, grid)
 
     # TODO: outros metodos da classe
 
