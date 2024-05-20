@@ -81,20 +81,20 @@ class PipeMania(Problem):
         # TODO
         pass
 
-    def get_value(self, row: int, col: int) -> str:
+    def get_value(self,state, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        if 0 <= row < self.height and 0 <= col < self.width:
-            return self.board.get_value(row,col)
+        if 0 <= row < state.board.height and 0 <= col < self.width:
+            return state.board.grid.get_value(row,col)
         else:
             raise IndexError("Position out of the board boundaries")
 
-    def is_connected(self, x1, y1, x2, y2):
+    def is_connected(self,state, x1, y1, x2, y2):
         """Verifica se as coordenadas (x1, y1) e (x2, y2) estão conectadas entre si."""
-        if not (0 <= x1 < self.height and 0 <= y1 < self.width and 0 <= x2 < self.height and 0 <= y2 < self.width):
+        if not (0 <= x1 < state.board.height and 0 <= y1 < state.board.width and 0 <= x2 < state.board.height and 0 <= y2 < state.board.width):
             return False
         
-        piece1 = self.get_value(x1, y1)
-        piece2 = self.get_value(x2, y2)
+        piece1 = state.board.grid.get_value(x1, y1)
+        piece2 = state.board.grid.get_value(x2, y2)
         
         # Definir as conexões de cada peça (ajustar conforme necessário)
         connections = {
@@ -129,6 +129,22 @@ class PipeMania(Problem):
         
         return False
 
+    def count_connections(self, state):
+        """Conta o número total de conexões na grid."""
+        total_connections = 0
+
+        for x in range(state.board.height):
+            for y in range(state.board.width):
+                # Verifica a conexão com a célula à direita
+                if y + 1 < state.board.width:
+                    if self.is_connected(self, x, y, x, y + 1):
+                        total_connections += 1
+                # Verifica a conexão com a célula abaixo
+                if x + 1 < state.board.height:
+                    if self.is_connected(self, x, y, x + 1, y):
+                        total_connections += 1
+
+        return total_connections
 
     def possible_moves(piece):
         """Retorna uma lista de todas as rotações possiveis da peça e que não inclui o estado atual da peça"""
