@@ -47,12 +47,12 @@ class Board:
         except:
             return None
 
-    def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
+    def adjacent_vertical_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
         return  (self.get_value(row-1, col), self.get_value(row+1, col))
 
-    def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
+    def adjacent_horizontal_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
         return  (self.get_value(row, col-1), self.get_value(row, col+1))
@@ -83,9 +83,17 @@ class PipeMania(Problem):
 
 
     def possible_moves(piece):
+        
         """Retorna uma lista de todas as rotações possiveis da peça e que não inclui o estado atual da peça"""
-        #TODO
-        pass
+        possibles = {"F": ("FC", "FB", "FE", "FD"),
+                     "B": ("BC", "BB", "BE", "BD"),
+                     "V": ("VC", "VB", "VE", "VD"),
+                     "L": ("LH", "LV")}
+        result = []
+        for i in possibles[piece[0]]:
+            if not i == piece:
+                result.append(i)
+        return result
         
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -94,7 +102,7 @@ class PipeMania(Problem):
         actions = []
         for x in len(state.board):
             for y in len(state.board[x]):
-                for move in possible_moves(state.board[x][y]):
+                for move in self.possible_moves(state.board[x][y]):
                     actions.append((x, y, move))
 
         return actions
