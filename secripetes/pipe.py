@@ -81,6 +81,54 @@ class PipeMania(Problem):
         # TODO
         pass
 
+    def get_value(self, row: int, col: int) -> str:
+        """Devolve o valor na respetiva posição do tabuleiro."""
+        if 0 <= row < self.height and 0 <= col < self.width:
+            return self.board.get_value(row,col)
+        else:
+            raise IndexError("Position out of the board boundaries")
+
+    def is_connected(self, x1, y1, x2, y2):
+        """Verifica se as coordenadas (x1, y1) e (x2, y2) estão conectadas entre si."""
+        if not (0 <= x1 < self.height and 0 <= y1 < self.width and 0 <= x2 < self.height and 0 <= y2 < self.width):
+            return False
+        
+        piece1 = self.get_value(x1, y1)
+        piece2 = self.get_value(x2, y2)
+        
+        # Definir as conexões de cada peça (ajustar conforme necessário)
+        connections = {
+            'FC': {'left': False, 'right': False, 'up': True, 'down': False},
+            'FB': {'left': False, 'right': False, 'up': False, 'down': True},
+            'FE': {'left': True, 'right': False, 'up': False, 'down': False},
+            'FD': {'left': False, 'right': True, 'up': False, 'down': False},
+            'LH': {'left': True, 'right': True, 'up': False, 'down': False},
+            'LV': {'left': False, 'right': False, 'up': True, 'down': True},
+            'BC': {'left': True, 'right': True, 'up': True, 'down': False},
+            'BB': {'left': True, 'right': True, 'up': False, 'down': True},
+            'BE': {'left': True, 'right': False, 'up': True, 'down': True},
+            'BD': {'left': False, 'right': True, 'up': True, 'down': True},
+            'VC': {'left': True, 'right': False, 'up': True, 'down': False},
+            'VB': {'left': False, 'right': True, 'up': False, 'down': True},
+            'VE': {'left': True, 'right': False, 'up': False, 'down': True},
+            'VD': {'left': False, 'right': True, 'up': True, 'down': False},
+            # Adicione outras peças conforme necessário
+        }
+
+        # Verificar se a peça está conectada a outra peça adjacente
+        if x1 == x2:
+            if y1 == y2 + 1:  # (x1, y1) está à direita de (x2, y2)
+                return connections[piece1]['left'] and connections[piece2]['right']
+            if y1 == y2 - 1:  # (x1, y1) está à esquerda de (x2, y2)
+                return connections[piece1]['right'] and connections[piece2]['left']
+        elif y1 == y2:
+            if x1 == x2 + 1:  # (x1, y1) está abaixo de (x2, y2)
+                return connections[piece1]['up'] and connections[piece2]['down']
+            if x1 == x2 - 1:  # (x1, y1) está acima de (x2, y2)
+                return connections[piece1]['down'] and connections[piece2]['up']
+        
+        return False
+
 
     def possible_moves(piece):
         """Retorna uma lista de todas as rotações possiveis da peça e que não inclui o estado atual da peça"""
