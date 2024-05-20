@@ -232,8 +232,10 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        # TODO
-        pass
+        if self.count_connections(state) == self.max_connections(state) and self.count_groups(state) == 0:
+            return True
+        return False
+
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
