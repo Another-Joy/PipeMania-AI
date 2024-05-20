@@ -71,6 +71,8 @@ class PipeManiaState:
         PipeManiaState.state_id += 1
 
     def __lt__(self, other):
+        """ Este método é utilizado em caso de empate na gestão da lista
+        de abertos nas procuras informadas. """
         return self.id < other.id
 
     # TODO: outros metodos da classe
@@ -84,20 +86,20 @@ class PipeMania(Problem):
         # TODO
         pass
 
-    def get_value(self,state, row: int, col: int) -> str:
+    def get_value(self,state: PipeManiaState, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        if 0 <= row < state.board.height and 0 <= col < self.width:
-            return state.board.grid.get_value(row,col)
+        if 0 <= row < state.board.height and 0 <= col < state.board.width:
+            return state.board.get_value(row,col)
         else:
             raise IndexError("Position out of the board boundaries")
 
-    def is_connected(self,state, x1, y1, x2, y2):
+    def is_connected(self,state: PipeManiaState, x1, y1, x2, y2):
         """Verifica se as coordenadas (x1, y1) e (x2, y2) estão conectadas entre si."""
         if not (0 <= x1 < state.board.height and 0 <= y1 < state.board.width and 0 <= x2 < state.board.height and 0 <= y2 < state.board.width):
             return False
         
-        piece1 = state.board.grid.get_value(x1, y1)
-        piece2 = state.board.grid.get_value(x2, y2)
+        piece1 = state.board.get_value(x1, y1)
+        piece2 = state.board.get_value(x2, y2)
         
         # Definir as conexões de cada peça (ajustar conforme necessário)
         connections = {
@@ -114,8 +116,7 @@ class PipeMania(Problem):
             'VC': {'left': True, 'right': False, 'up': True, 'down': False},
             'VB': {'left': False, 'right': True, 'up': False, 'down': True},
             'VE': {'left': True, 'right': False, 'up': False, 'down': True},
-            'VD': {'left': False, 'right': True, 'up': True, 'down': False},
-            # Adicione outras peças conforme necessário
+            'VD': {'left': False, 'right': True, 'up': True, 'down': False}
         }
 
         # Verificar se a peça está conectada a outra peça adjacente
@@ -132,7 +133,20 @@ class PipeMania(Problem):
         
         return False
 
-    def count_connections(self, state):
+
+    def max_connections(self, state: PipeManiaState):
+        max_con = 0
+        for x in range(state.board.height):
+            for y in range(state.board.width):
+                match state.board.grid[x][y][0]:
+                    case "F": max_con +=1
+                    case "L": max_con +=2
+                    case "V": max_con +=2
+                    case "B": max_con +=3
+        return max_con
+
+
+    def count_connections(self, state: PipeManiaState):
         """Conta o número total de conexões na grid."""
         total_connections = 0
 
