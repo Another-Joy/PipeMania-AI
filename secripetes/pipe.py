@@ -18,19 +18,6 @@ from search import (
 )
 
 
-class PipeManiaState:
-    state_id = 0
-
-    def __init__(self, board):
-        self.board = board
-        self.id = PipeManiaState.state_id
-        PipeManiaState.state_id += 1
-
-    def __lt__(self, other):
-        return self.id < other.id
-
-    # TODO: outros metodos da classe
-
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
@@ -47,12 +34,12 @@ class Board:
         except:
             return None
 
-    def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
+    def adjacent_vertical_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
         return  (self.get_value(row-1, col), self.get_value(row+1, col))
 
-    def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
+    def adjacent_horizontal_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
         return  (self.get_value(row, col-1), self.get_value(row, col+1))
@@ -75,9 +62,25 @@ class Board:
     # TODO: outros metodos da classe
 
 
-class PipeMania(Problem):
+class PipeManiaState:
+    state_id = 0
+
     def __init__(self, board: Board):
+        self.board = board
+        self.id = PipeManiaState.state_id
+        PipeManiaState.state_id += 1
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    # TODO: outros metodos da classe
+
+
+
+class PipeMania(Problem):
+    def __init__(self, initial_board: Board):
         """O construtor especifica o estado inicial."""
+        self.initial_state = PipeManiaState(initial_board)
         # TODO
         pass
 
@@ -147,29 +150,43 @@ class PipeMania(Problem):
         return total_connections
 
     def possible_moves(piece):
+        
         """Retorna uma lista de todas as rotações possiveis da peça e que não inclui o estado atual da peça"""
-        #TODO
-        pass
+        possibles = {"F": ("FC", "FB", "FE", "FD"),
+                     "B": ("BC", "BB", "BE", "BD"),
+                     "V": ("VC", "VB", "VE", "VD"),
+                     "L": ("LH", "LV")}
+        result = []
+        for i in possibles[piece[0]]:
+            if not i == piece:
+                result.append(i)
+        return result
         
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         
         actions = []
-        for x in len(state.board):
-            for y in len(state.board[x]):
-                for move in possible_moves(state.board[x][y]):
+        for x in len(state.board.grid):
+            for y in len(state.board.grid[x]):
+                for move in self.possible_moves(state.board.grid[x][y]):
                     actions.append((x, y, move))
 
         return actions
+
 
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        # TODO
-        pass
+        if action in self.actions(state):
+            board = state.board.grid
+            board[action[0]][action[1]] = action[2]
+            return PipeManiaState(Board(board))
+        else:
+            raise "Action not in possible listS"
+
 
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
