@@ -163,6 +163,32 @@ class PipeMania(Problem):
 
         return total_connections
 
+
+    def count_groups(self, state: PipeManiaState):
+        """Conta o número de grupos de células conectadas na grid."""
+        visited = [[False] * state.board.width for _ in range(state.board.height)]
+        
+        def dfs(x, y):
+            """Função auxiliar para realizar DFS e marcar todas as células conectadas."""
+            stack = [(x, y)]
+            while stack:
+                cx, cy = stack.pop()
+                if visited[cx][cy]:
+                    continue
+                visited[cx][cy] = True
+                for nx, ny in [(cx-1, cy), (cx+1, cy), (cx, cy-1), (cx, cy+1)]:
+                    if 0 <= nx < state.board.height and 0 <= ny < state.board.width and not visited[nx][ny] and self.is_connected(state ,cx, cy, nx, ny):
+                        stack.append((nx, ny))
+        
+        group_count = 0
+        for i in range(state.board.height):
+            for j in range(state.board.width):
+                if not visited[i][j]:
+                    dfs(i, j)
+                    group_count += 1
+        
+        return group_count
+
     def possible_moves(piece):
         
         """Retorna uma lista de todas as rotações possiveis da peça e que não inclui o estado atual da peça"""
