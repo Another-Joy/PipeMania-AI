@@ -18,19 +18,6 @@ from search import (
 )
 
 
-class PipeManiaState:
-    state_id = 0
-
-    def __init__(self, board):
-        self.board = board
-        self.id = PipeManiaState.state_id
-        PipeManiaState.state_id += 1
-
-    def __lt__(self, other):
-        return self.id < other.id
-
-    # TODO: outros metodos da classe
-
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
@@ -75,9 +62,25 @@ class Board:
     # TODO: outros metodos da classe
 
 
-class PipeMania(Problem):
+class PipeManiaState:
+    state_id = 0
+
     def __init__(self, board: Board):
+        self.board = board
+        self.id = PipeManiaState.state_id
+        PipeManiaState.state_id += 1
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    # TODO: outros metodos da classe
+
+
+
+class PipeMania(Problem):
+    def __init__(self, initial_board: Board):
         """O construtor especifica o estado inicial."""
+        self.initial_state = PipeManiaState(initial_board)
         # TODO
         pass
 
@@ -100,20 +103,26 @@ class PipeMania(Problem):
         partir do estado passado como argumento."""
         
         actions = []
-        for x in len(state.board):
-            for y in len(state.board[x]):
-                for move in self.possible_moves(state.board[x][y]):
+        for x in len(state.board.grid):
+            for y in len(state.board.grid[x]):
+                for move in self.possible_moves(state.board.grid[x][y]):
                     actions.append((x, y, move))
 
         return actions
+
 
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        # TODO
-        pass
+        if action in self.actions(state):
+            board = state.board.grid
+            board[action[0]][action[1]] = action[2]
+            return PipeManiaState(Board(board))
+        else:
+            raise "Action not in possible listS"
+
 
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
