@@ -239,23 +239,6 @@ class PipeMania(Problem):
             'B': ['BC', 'BB', 'BE', 'BD']
         }
 
-        # Define the possible connections for each direction
-        connections = {
-            'FC': {'left': False, 'right': False, 'up': True, 'down': False},
-            'FB': {'left': False, 'right': False, 'up': False, 'down': True},
-            'FE': {'left': True, 'right': False, 'up': False, 'down': False},
-            'FD': {'left': False, 'right': True, 'up': False, 'down': False},
-            'LH': {'left': True, 'right': True, 'up': False, 'down': False},
-            'LV': {'left': False, 'right': False, 'up': True, 'down': True},
-            'BC': {'left': True, 'right': True, 'up': True, 'down': False},
-            'BB': {'left': True, 'right': True, 'up': False, 'down': True},
-            'BE': {'left': True, 'right': False, 'up': True, 'down': True},
-            'BD': {'left': False, 'right': True, 'up': True, 'down': True},
-            'VC': {'left': True, 'right': False, 'up': True, 'down': False},
-            'VB': {'left': False, 'right': True, 'up': False, 'down': True},
-            'VE': {'left': True, 'right': False, 'up': False, 'down': True},
-            'VD': {'left': False, 'right': True, 'up': True, 'down': False}
-        }
 
         # Get the locked neighbors and their connections
         neighbors = {
@@ -266,8 +249,7 @@ class PipeMania(Problem):
         }
 
         locked_neighbors = {
-            direction: state.board.get_value(*pos) if state.board.get_lock(*pos) else None
-            for direction, pos in neighbors.items()
+            direction: state.board.get_value(*pos) if state.board.get_lock(*pos) else None for direction, pos in neighbors.items()
         }
 
         # Determine valid pieces based on locked neighbors
@@ -291,12 +273,17 @@ class PipeMania(Problem):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         
+        
+        
+        
         actions = []
         for x in len(state.board.grid):
             for y in len(state.board.grid[x]):
                 if not state.board.grid[x][y][1]:
-                    for move in self.possible_moves(state.board.grid[x][y]):
-                        actions.append((x, y, move))
+                    combs = self.evaluate_combinations(state, x, y)
+                    if len(combs) == 1:
+                        return [combs,]
+                    actions.extend(combs)
         return actions
 
 
@@ -344,8 +331,6 @@ class PipeMania(Problem):
 
     # TODO: outros metodos da classe
 
-
-Board.parse_instance()
 
 
 if __name__ == "__main__":
