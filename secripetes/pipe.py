@@ -30,30 +30,38 @@ class Board:
 
     def get_value(self, row: int, col: int) -> str:
         try:
-            return self.grid[row][col]
+            return self.grid[row][col][0]
+        except:
+            return None    
+        
+    def get_lock(self, row: int, col: int) -> str:
+        try:
+            return self.grid[row][col][1]
         except:
             return None
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
-        return  (self.get_value(row-1, col), self.get_value(row+1, col))
+        return  (self.get_value(row-1, col)[0], self.get_value(row+1, col)[0])
 
     def adjacent_horizontal_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        return  (self.get_value(row, col-1), self.get_value(row, col+1))
+        return  (self.get_value(row, col-1)[0], self.get_value(row, col+1)[0])
 
     @staticmethod
     def parse_instance():
         """Lê a instância do problema do standard input (stdin) e retorna uma instância da classe Board."""
-        input_lines = sys.stdin.read().strip().split('\n')
-        
-
+        #sys.stdin.read().strip().split('\n')
+        input_lines = "VB\tVC\nVE\tVD\n".strip().split('\n')
+        grid= []
         
         # As linhas subsequentes contêm o grid
-        grid = [list(line.split("\t").strip()) for line in input_lines]
+        for line in input_lines:
+            grid.append(list((val, 0) for val in line.strip().split("\t")))
         
+        print(grid)
         width, height = len(grid[0]), len(grid)
         
         # Cria e retorna uma instância de Board
@@ -93,15 +101,8 @@ class PipeMania(Problem):
         else:
             raise IndexError("Position out of the board boundaries")
 
-    def is_connected(self,state: PipeManiaState, x1, y1, x2, y2):
-        """Verifica se as coordenadas (x1, y1) e (x2, y2) estão conectadas entre si."""
-        if not (0 <= x1 < state.board.height and 0 <= y1 < state.board.width and 0 <= x2 < state.board.height and 0 <= y2 < state.board.width):
-            return False
+    def connects(self, piece1, piece2, dir):
         
-        piece1 = state.board.get_value(x1, y1)
-        piece2 = state.board.get_value(x2, y2)
-        
-        # Definir as conexões de cada peça (ajustar conforme necessário)
         connections = {
             'FC': {'left': False, 'right': False, 'up': True, 'down': False},
             'FB': {'left': False, 'right': False, 'up': False, 'down': True},
@@ -120,16 +121,37 @@ class PipeMania(Problem):
         }
 
         # Verificar se a peça está conectada a outra peça adjacente
+        if dir == 'left':
+                return connections[piece1]['left'] and connections[piece2]['right']
+        elif dir == 'right':
+                return connections[piece1]['right'] and connections[piece2]['left']
+        elif dir == 'up':
+                return connections[piece1]['up'] and connections[piece2]['down']
+        elif dir == 'down':
+                return connections[piece1]['down'] and connections[piece2]['up']
+        
+
+
+    def is_connected(self,state: PipeManiaState, x1, y1, x2, y2):
+        """Verifica se as coordenadas (x1, y1) e (x2, y2) estão conectadas entre si."""
+        if not (0 <= x1 < state.board.height and 0 <= y1 < state.board.width and 0 <= x2 < state.board.height and 0 <= y2 < state.board.width):
+            return False
+        
+        piece1 = state.board.get_value(x1, y1)
+        piece2 = state.board.get_value(x2, y2)
+        
+
+        # Verificar se a peça está conectada a outra peça adjacente
         if x1 == x2:
             if y1 == y2 + 1:  # (x1, y1) está à direita de (x2, y2)
-                return connections[piece1]['left'] and connections[piece2]['right']
+                return self.connects(self, piece1, piece2, "left")
             if y1 == y2 - 1:  # (x1, y1) está à esquerda de (x2, y2)
-                return connections[piece1]['right'] and connections[piece2]['left']
+                return self.connects(self, piece1, piece2, "right")
         elif y1 == y2:
             if x1 == x2 + 1:  # (x1, y1) está abaixo de (x2, y2)
-                return connections[piece1]['up'] and connections[piece2]['down']
+                return self.connects(self, piece1, piece2, "up")
             if x1 == x2 - 1:  # (x1, y1) está acima de (x2, y2)
-                return connections[piece1]['down'] and connections[piece2]['up']
+                return self.connects(self, piece1, piece2, "down")
         
         return False
 
@@ -209,10 +231,11 @@ class PipeMania(Problem):
         actions = []
         for x in len(state.board.grid):
             for y in len(state.board.grid[x]):
-                for move in self.possible_moves(state.board.grid[x][y]):
-                    actions.append((x, y, move))
-
+                if not state.board.grid[x][y][1]:
+                    for move in self.possible_moves(state.board.grid[x][y]):
+                        actions.append((x, y, move))
         return actions
+
 
 
     def result(self, state: PipeManiaState, action):
@@ -222,10 +245,20 @@ class PipeMania(Problem):
         self.actions(state)."""
         if action in self.actions(state):
             board = state.board.grid
-            board[action[0]][action[1]] = action[2]
+            for x in len(board):
+                for y in len(board[x]):
+                    if board[x][y][1] == 2:
+                        board[x][y] = (board[x][y][0], 0)
+            
+            if board[]
+            board[action[0]][action[1]] = (action[2], 2)
             return PipeManiaState(Board(board))
         else:
-            raise "Action not in possible listS"
+            raise "Action not in possible list"
+        
+        
+    def points(self, state:PipeManiaState):
+        pass
 
 
     def goal_test(self, state: PipeManiaState):
@@ -243,6 +276,9 @@ class PipeMania(Problem):
         pass
 
     # TODO: outros metodos da classe
+
+
+Board.parse_instance()
 
 
 if __name__ == "__main__":
