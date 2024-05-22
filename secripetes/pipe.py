@@ -38,7 +38,7 @@ class Board:
         try:
             return self.grid[row][col][1]
         except:
-            return None
+            return 1
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente acima e abaixo,
@@ -118,7 +118,8 @@ class PipeMania(Problem):
             'VB': {'left': False, 'right': True, 'up': False, 'down': True},
             'VE': {'left': True, 'right': False, 'up': False, 'down': True},
             'VD': {'left': False, 'right': True, 'up': True, 'down': False},
-            None: {'left': False, 'right': False, 'up': False, 'down': False}
+            None: {'left': False, 'right': False, 'up': False, 'down': False},
+            'All': {'left': True, 'right': True, 'up': True, 'down': True}
         }
 
         # Verificar se a peça está conectada a outra peça adjacente
@@ -261,6 +262,10 @@ class PipeMania(Problem):
                 for direction, neighbor_piece in locked_neighbors.items():
                     if neighbor_piece:
                         if not self.connects(piece, neighbor_piece, direction):
+                            valid = False
+                            break
+                    else:
+                        if self.connects(piece, "All", direction):
                             valid = False
                             break
                 if valid:
