@@ -224,6 +224,69 @@ class PipeMania(Problem):
                 result.append(i)
         return result
         
+    def evaluate_combinations(self, state: PipeManiaState, row: int, col: int):
+        """
+        Given a coordinate (row, col), evaluate possible pieces that can be placed
+        based on the locked neighbor pieces.
+        """
+        if state.board.get_lock(row, col):
+            return []  # If the current position is locked, no combinations are possible.
+
+        possible_pieces = {
+            'F': ['FC', 'FB', 'FE', 'FD'],
+            'L': ['LH', 'LV'],
+            'V': ['VC', 'VB', 'VE', 'VD'],
+            'B': ['BC', 'BB', 'BE', 'BD']
+        }
+
+        # Define the possible connections for each direction
+        connections = {
+            'FC': {'left': False, 'right': False, 'up': True, 'down': False},
+            'FB': {'left': False, 'right': False, 'up': False, 'down': True},
+            'FE': {'left': True, 'right': False, 'up': False, 'down': False},
+            'FD': {'left': False, 'right': True, 'up': False, 'down': False},
+            'LH': {'left': True, 'right': True, 'up': False, 'down': False},
+            'LV': {'left': False, 'right': False, 'up': True, 'down': True},
+            'BC': {'left': True, 'right': True, 'up': True, 'down': False},
+            'BB': {'left': True, 'right': True, 'up': False, 'down': True},
+            'BE': {'left': True, 'right': False, 'up': True, 'down': True},
+            'BD': {'left': False, 'right': True, 'up': True, 'down': True},
+            'VC': {'left': True, 'right': False, 'up': True, 'down': False},
+            'VB': {'left': False, 'right': True, 'up': False, 'down': True},
+            'VE': {'left': True, 'right': False, 'up': False, 'down': True},
+            'VD': {'left': False, 'right': True, 'up': True, 'down': False}
+        }
+
+        # Get the locked neighbors and their connections
+        neighbors = {
+            'left': (row, col - 1),
+            'right': (row, col + 1),
+            'up': (row - 1, col),
+            'down': (row + 1, col)
+        }
+
+        locked_neighbors = {
+            direction: state.board.get_value(*pos) if state.board.get_lock(*pos) else None
+            for direction, pos in neighbors.items()
+        }
+
+        # Determine valid pieces based on locked neighbors
+        valid_pieces = []
+
+        for piece_type, pieces in possible_pieces.items():
+            for piece in pieces:
+                valid = True
+                for direction, neighbor_piece in locked_neighbors.items():
+                    if neighbor_piece:
+                        if not self.connects(piece, neighbor_piece, direction):
+                            valid = False
+                            break
+                if valid:
+                    valid_pieces.append(piece)
+
+        return valid_pieces
+
+
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
