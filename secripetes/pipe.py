@@ -226,6 +226,10 @@ class PipeMania(Problem):
             return PipeManiaState(Board(board))
         else:
             raise "Action not in possible listS"
+        
+        
+    def points(self, state:PipeManiaState):
+        pass
 
 
     def goal_test(self, state: PipeManiaState):
