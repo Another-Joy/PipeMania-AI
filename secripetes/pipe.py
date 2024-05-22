@@ -293,17 +293,14 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        if action in self.actions(state):
-            board = state.board.grid
-            for x in len(board):
-                for y in len(board[x]):
-                    if board[x][y][1] == 2:
-                        board[x][y] = (board[x][y][0], 0)
-            
-            board[action[0]][action[1]] = (action[2], 2)
-            return PipeManiaState(Board(board))
-        else:
-            raise "Action not in possible list"
+        board = state.board.grid
+        for x in len(board):
+            for y in len(board[x]):
+                if board[x][y][1] == 2:
+                    board[x][y] = (board[x][y][0], 0)
+        
+        board[action[0]][action[1]] = (action[2], 2)
+        return PipeManiaState(Board(board))
         
         
     def points(self, state:PipeManiaState):
