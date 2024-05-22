@@ -322,7 +322,25 @@ class PipeMania(Problem):
 
 
     def fixes_border(self, state: PipeManiaState):
-        for y in range()
+        """Try to lock the border pieces if they can only be in one position."""
+
+        # Define border coordinates
+        border_coordinates = []
+        for col in range(state.board.width):
+            border_coordinates.append((0, col))  # Top row
+            border_coordinates.append((state.board.height - 1, col))  # Bottom row
+        for row in range(1, state.board.height - 1):
+            border_coordinates.append((row, 0))  # Left column
+            border_coordinates.append((row, state.board.width - 1))  # Right column
+
+        # Try to lock each border piece
+        for row, col in border_coordinates:
+            if state.board.get_lock(row, col) == 0:  # If not already locked
+                possible_pieces = self.evaluate_combinations(state, row, col)
+                if len(possible_pieces) == 1:
+                    state.board.grid[row][col] = (possible_pieces[0], 1)  # Lock the piece
+
+        return state
 
 
 
