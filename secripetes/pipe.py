@@ -53,8 +53,7 @@ class Board:
     @staticmethod
     def parse_instance():
         """Lê a instância do problema do standard input (stdin) e retorna uma instância da classe Board."""
-        #sys.stdin.read().strip().split('\n')
-        input_lines = "VB\tVC\nVE\tVD\n".strip().split('\n')
+        input_lines = sys.stdin.read().strip().split('\n')
         grid= []
         
         # As linhas subsequentes contêm o grid
@@ -90,7 +89,7 @@ class PipeManiaState:
 class PipeMania(Problem):
     def __init__(self, initial_board: Board):
         """O construtor especifica o estado inicial."""
-        self.initial_state = PipeManiaState(initial_board)
+        self.initial_state = self.fixes_border(PipeManiaState(initial_board))
         # TODO
         pass
 
@@ -279,8 +278,6 @@ class PipeMania(Problem):
         partir do estado passado como argumento."""
         
         
-        
-        
         actions = []
         for x in len(state.board.grid):
             for y in len(state.board.grid[x]):
@@ -333,13 +330,23 @@ class PipeMania(Problem):
             border_coordinates.append((row, 0))  # Left column
             border_coordinates.append((row, state.board.width - 1))  # Right column
 
+        
+        reuse = []
         # Try to lock each border piece
         for row, col in border_coordinates:
             if state.board.get_lock(row, col) == 0:  # If not already locked
                 possible_pieces = self.evaluate_combinations(state, row, col)
                 if len(possible_pieces) == 1:
                     state.board.grid[row][col] = (possible_pieces[0], 1)  # Lock the piece
-
+                else: reuse.append((row, col))
+        
+        for row, col in reuse:
+            if state.board.get_lock(row, col) == 0:  # If not already locked
+                possible_pieces = self.evaluate_combinations(state, row, col)
+                if len(possible_pieces) == 1:
+                    state.board.grid[row][col] = (possible_pieces[0], 1)  # Lock the piece
+                    
+                    
         return state
 
 
@@ -354,6 +361,13 @@ class PipeMania(Problem):
 
 
 if __name__ == "__main__":
+    
+    
+    board = Board.parse_instance()
+    problem = PipeMania(board)
+    node = depth_first_tree_search(problem)
+    print(node.state.board, end="")
+    
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
