@@ -34,7 +34,7 @@ class Board:
         except:
             return None    
         
-    def get_lock(self, row: int, col: int) -> str:
+    def get_lock(self, row: int, col: int) -> int:
         try:
             return self.grid[row][col][1]
         except:
@@ -117,7 +117,8 @@ class PipeMania(Problem):
             'VC': {'left': True, 'right': False, 'up': True, 'down': False},
             'VB': {'left': False, 'right': True, 'up': False, 'down': True},
             'VE': {'left': True, 'right': False, 'up': False, 'down': True},
-            'VD': {'left': False, 'right': True, 'up': True, 'down': False}
+            'VD': {'left': False, 'right': True, 'up': True, 'down': False},
+            None: {'left': False, 'right': False, 'up': False, 'down': False}
         }
 
         # Verificar se a peça está conectada a outra peça adjacente
@@ -160,11 +161,10 @@ class PipeMania(Problem):
         max_con = 0
         for x in range(state.board.height):
             for y in range(state.board.width):
-                match state.board.grid[x][y][0]:
-                    case "F": max_con +=1
-                    case "L": max_con +=2
-                    case "V": max_con +=2
-                    case "B": max_con +=3
+                if state.board.grid[x][y][0] == "F": max_con +=1
+                elif state.board.grid[x][y][0] == "L": max_con +=2
+                elif state.board.grid[x][y][0] == "V": max_con +=2
+                elif state.board.grid[x][y][0] == "B": max_con +=3
         return max_con
 
 
@@ -313,7 +313,6 @@ class PipeMania(Problem):
                     if board[x][y][1] == 2:
                         board[x][y] = (board[x][y][0], 0)
             
-            if board[]
             board[action[0]][action[1]] = (action[2], 2)
             return PipeManiaState(Board(board))
         else:
@@ -331,6 +330,11 @@ class PipeMania(Problem):
         if self.count_connections(state) == self.max_connections(state) and self.count_groups(state) == 0:
             return True
         return False
+
+
+    def fixes_border(self, state: PipeManiaState):
+        for y in range()
+
 
 
     def h(self, node: Node):
