@@ -34,7 +34,7 @@ class Board:
         except:
             return None    
         
-    def get_lock(self, row: int, col: int) -> str:
+    def get_lock(self, row: int, col: int) -> int:
         try:
             return self.grid[row][col][1]
         except:
@@ -117,7 +117,8 @@ class PipeMania(Problem):
             'VC': {'left': True, 'right': False, 'up': True, 'down': False},
             'VB': {'left': False, 'right': True, 'up': False, 'down': True},
             'VE': {'left': True, 'right': False, 'up': False, 'down': True},
-            'VD': {'left': False, 'right': True, 'up': True, 'down': False}
+            'VD': {'left': False, 'right': True, 'up': True, 'down': False},
+            None: {'left': False, 'right': False, 'up': False, 'down': False}
         }
 
         # Verificar se a peça está conectada a outra peça adjacente
@@ -160,11 +161,10 @@ class PipeMania(Problem):
         max_con = 0
         for x in range(state.board.height):
             for y in range(state.board.width):
-                match state.board.grid[x][y][0]:
-                    case "F": max_con +=1
-                    case "L": max_con +=2
-                    case "V": max_con +=2
-                    case "B": max_con +=3
+                if state.board.grid[x][y][0] == "F": max_con +=1
+                elif state.board.grid[x][y][0] == "L": max_con +=2
+                elif state.board.grid[x][y][0] == "V": max_con +=2
+                elif state.board.grid[x][y][0] == "B": max_con +=3
         return max_con
 
 
@@ -239,23 +239,6 @@ class PipeMania(Problem):
             'B': ['BC', 'BB', 'BE', 'BD']
         }
 
-        # Define the possible connections for each direction
-        connections = {
-            'FC': {'left': False, 'right': False, 'up': True, 'down': False},
-            'FB': {'left': False, 'right': False, 'up': False, 'down': True},
-            'FE': {'left': True, 'right': False, 'up': False, 'down': False},
-            'FD': {'left': False, 'right': True, 'up': False, 'down': False},
-            'LH': {'left': True, 'right': True, 'up': False, 'down': False},
-            'LV': {'left': False, 'right': False, 'up': True, 'down': True},
-            'BC': {'left': True, 'right': True, 'up': True, 'down': False},
-            'BB': {'left': True, 'right': True, 'up': False, 'down': True},
-            'BE': {'left': True, 'right': False, 'up': True, 'down': True},
-            'BD': {'left': False, 'right': True, 'up': True, 'down': True},
-            'VC': {'left': True, 'right': False, 'up': True, 'down': False},
-            'VB': {'left': False, 'right': True, 'up': False, 'down': True},
-            'VE': {'left': True, 'right': False, 'up': False, 'down': True},
-            'VD': {'left': False, 'right': True, 'up': True, 'down': False}
-        }
 
         # Get the locked neighbors and their connections
         neighbors = {
@@ -266,8 +249,7 @@ class PipeMania(Problem):
         }
 
         locked_neighbors = {
-            direction: state.board.get_value(*pos) if state.board.get_lock(*pos) else None
-            for direction, pos in neighbors.items()
+            direction: state.board.get_value(*pos) if state.board.get_lock(*pos) else None for direction, pos in neighbors.items()
         }
 
         # Determine valid pieces based on locked neighbors
@@ -291,12 +273,17 @@ class PipeMania(Problem):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         
+        
+        
+        
         actions = []
         for x in len(state.board.grid):
             for y in len(state.board.grid[x]):
                 if not state.board.grid[x][y][1]:
-                    for move in self.possible_moves(state.board.grid[x][y]):
-                        actions.append((x, y, move))
+                    combs = self.evaluate_combinations(state, x, y)
+                    if len(combs) == 1:
+                        return [combs,]
+                    actions.extend(combs)
         return actions
 
 
@@ -306,18 +293,14 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        if action in self.actions(state):
-            board = state.board.grid
-            for x in len(board):
-                for y in len(board[x]):
-                    if board[x][y][1] == 2:
-                        board[x][y] = (board[x][y][0], 0)
-            
-            if board[]
-            board[action[0]][action[1]] = (action[2], 2)
-            return PipeManiaState(Board(board))
-        else:
-            raise "Action not in possible list"
+        board = state.board.grid
+        for x in len(board):
+            for y in len(board[x]):
+                if board[x][y][1] == 2:
+                    board[x][y] = (board[x][y][0], 0)
+        
+        board[action[0]][action[1]] = (action[2], 2)
+        return PipeManiaState(Board(board))
         
         
     def points(self, state:PipeManiaState):
@@ -333,6 +316,11 @@ class PipeMania(Problem):
         return False
 
 
+    def fixes_border(self, state: PipeManiaState):
+        for y in range()
+
+
+
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
         # TODO
@@ -340,8 +328,6 @@ class PipeMania(Problem):
 
     # TODO: outros metodos da classe
 
-
-Board.parse_instance()
 
 
 if __name__ == "__main__":
