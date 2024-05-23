@@ -5,7 +5,6 @@
 # Grupo 00:
 # 00000 Nome1
 # 00000 Nome2
-from timeit import default_timer as timer
 import sys
 from search import (
     Problem,
@@ -336,8 +335,7 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        global nodes
-        nodes += 1
+
         if self.count_groups(state) == 1:
             return True
         return False
@@ -410,22 +408,21 @@ class PipeMania(Problem):
 
 if __name__ == "__main__":
     
-    with open('in', 'r') as sys.stdin: 
         
-        start = timer()
+    #start = timer()
 
 
-        board = Board.parse_instance()
-        print(board)
-        problem = PipeMania(board)
-        if problem.goal_test(problem.initial):
-            print(problem.initial.board, end="")
-            print(f"{(timer() - start)*1000} miliseconds")
-            exit()
-        node = depth_first_tree_search(problem)
-        print(node.state.board, end="")
-        print(nodes)
-        print(f"{(timer() - start)*1000} miliseconds")
+    board = Board.parse_instance()
+    #print(board)
+    problem = PipeMania(board)
+    if problem.goal_test(problem.initial):
+        print(problem.initial.board, end="")
+        #print(f"{(timer() - start)*1000} miliseconds")
+        exit()
+    node = depth_first_tree_search(problem)
+    print(node.state.board, end="")
+    #print(nodes)
+    #print(f"{(timer() - start)*1000} miliseconds")
     
     # TODO:
     # Ler o ficheiro do standard input,
