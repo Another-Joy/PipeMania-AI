@@ -23,18 +23,29 @@ class Board:
     """Representação interna de um tabuleiro de PipeMania."""
 
 
-    def __init__(self, width, height, grid):
-        self.width = width
-        self.height = height
+    def __init__(self, grid):
         self.grid = grid
+        self.width, self.height = len(grid[0]), len(grid)
+    def __str__(self):
+        s = ""
+        for r in range(len(self.grid)):
+            for c in range(len(self.grid[0])-1):
+                s += (self.grid[r][c][0] + "\t")
+            s += self.grid[r][-1][0]
+            s += "\n"
+        return s
 
     def get_value(self, row: int, col: int) -> str:
+        if row <0 or col<0:
+            return None
         try:
             return self.grid[row][col][0]
         except:
             return None    
         
     def get_lock(self, row: int, col: int) -> int:
+        if row <0 or col<0:
+            return 1
         try:
             return self.grid[row][col][1]
         except:
@@ -59,12 +70,10 @@ class Board:
         # As linhas subsequentes contêm o grid
         for line in input_lines:
             grid.append(list((val, 0) for val in line.strip().split("\t")))
-        
-        print(grid)
-        width, height = len(grid[0]), len(grid)
+
         
         # Cria e retorna uma instância de Board
-        return Board(width, height, grid)
+        return Board(grid)
 
     # TODO: outros metodos da classe
 
@@ -89,7 +98,7 @@ class PipeManiaState:
 class PipeMania(Problem):
     def __init__(self, initial_board: Board):
         """O construtor especifica o estado inicial."""
-        self.initial_state = self.fixes_border(PipeManiaState(initial_board))
+        self.initial = self.preprocess(PipeManiaState(initial_board))
         # TODO
         pass
 
@@ -145,14 +154,14 @@ class PipeMania(Problem):
         # Verificar se a peça está conectada a outra peça adjacente
         if x1 == x2:
             if y1 == y2 + 1:  # (x1, y1) está à direita de (x2, y2)
-                return self.connects(self, piece1, piece2, "left")
+                return self.connects(piece1, piece2, "left")
             if y1 == y2 - 1:  # (x1, y1) está à esquerda de (x2, y2)
-                return self.connects(self, piece1, piece2, "right")
+                return self.connects(piece1, piece2, "right")
         elif y1 == y2:
             if x1 == x2 + 1:  # (x1, y1) está abaixo de (x2, y2)
-                return self.connects(self, piece1, piece2, "up")
+                return self.connects(piece1, piece2, "up")
             if x1 == x2 - 1:  # (x1, y1) está acima de (x2, y2)
-                return self.connects(self, piece1, piece2, "down")
+                return self.connects(piece1, piece2, "down")
         
         return False
 
@@ -161,11 +170,11 @@ class PipeMania(Problem):
         max_con = 0
         for x in range(state.board.height):
             for y in range(state.board.width):
-                if state.board.grid[x][y][0] == "F": max_con +=1
-                elif state.board.grid[x][y][0] == "L": max_con +=2
-                elif state.board.grid[x][y][0] == "V": max_con +=2
-                elif state.board.grid[x][y][0] == "B": max_con +=3
-        return max_con
+                if state.board.grid[x][y][0][0] == "F": max_con +=1
+                elif state.board.grid[x][y][0][0] == "L": max_con +=2
+                elif state.board.grid[x][y][0][0] == "V": max_con +=2
+                elif state.board.grid[x][y][0][0] == "B": max_con +=3
+        return (max_con //2)
 
 
     def count_connections(self, state: PipeManiaState):
@@ -176,11 +185,11 @@ class PipeMania(Problem):
             for y in range(state.board.width):
                 # Verifica a conexão com a célula à direita
                 if y + 1 < state.board.width:
-                    if self.is_connected(self, x, y, x, y + 1):
+                    if self.is_connected(state, x, y, x, y + 1):
                         total_connections += 1
                 # Verifica a conexão com a célula abaixo
                 if x + 1 < state.board.height:
-                    if self.is_connected(self, x, y, x + 1, y):
+                    if self.is_connected(state,x, y, x + 1, y):
                         total_connections += 1
 
         return total_connections
@@ -239,7 +248,6 @@ class PipeMania(Problem):
             'B': ['BC', 'BB', 'BE', 'BD']
         }
 
-
         # Get the locked neighbors and their connections
         neighbors = {
             'left': (row, col - 1),
@@ -247,45 +255,58 @@ class PipeMania(Problem):
             'up': (row - 1, col),
             'down': (row + 1, col)
         }
-
+        
         locked_neighbors = {
-            direction: state.board.get_value(*pos) if state.board.get_lock(*pos) else None for direction, pos in neighbors.items()
+            direction: state.board.get_value(*pos) if state.board.get_lock(*pos) else "ignore" for direction, pos in neighbors.items()
         }
-
+        
         # Determine valid pieces based on locked neighbors
         valid_pieces = []
 
-        for piece_type, pieces in possible_pieces.items():
-            for piece in pieces:
-                valid = True
-                for direction, neighbor_piece in locked_neighbors.items():
-                    if neighbor_piece:
-                        if not self.connects(piece, neighbor_piece, direction):
-                            valid = False
-                            break
-                    else:
-                        if self.connects(piece, "All", direction):
-                            valid = False
-                            break
-                if valid:
-                    valid_pieces.append(piece)
-
+        for piece in possible_pieces[(state.board.get_value(row, col))[0]]:
+            valid = True
+            for direction, neighbor_piece in locked_neighbors.items():
+                if neighbor_piece == "ignore": continue
+                elif neighbor_piece:
+                    if self.connects(piece, "All", direction) and (not self.connects("All", neighbor_piece, direction)):
+                        valid = False
+                        break                 
+                    elif (not self.connects(piece, "All", direction)) and self.connects("All", neighbor_piece, direction):
+                        valid = False
+                        break   
+                else:
+                    if self.connects(piece, "All", direction):
+                        valid = False
+                        break
+            if valid:
+                valid_pieces.append(piece)
         return valid_pieces
 
 
+    def locks(self, state:PipeManiaState):
+        sures = []
+        for x in range(len(state.board.grid)):
+            for y in range(len(state.board.grid[x])):
+                if not state.board.grid[x][y][1]:
+                    combs = self.evaluate_combinations(state, x, y)
+                    if len(combs) == 1:
+                        sures.append((x, y, combs[0]))
+        return sures
+    
+    
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         
         
         actions = []
-        for x in len(state.board.grid):
-            for y in len(state.board.grid[x]):
+        for x in range(len(state.board.grid)):
+            for y in range(len(state.board.grid[x])):
                 if not state.board.grid[x][y][1]:
                     combs = self.evaluate_combinations(state, x, y)
                     if len(combs) == 1:
-                        return [combs,]
-                    actions.extend(combs)
+                        return [(x, y, combs[0])]
+                    actions.extend((x, y, comb)for comb in combs)
         return actions
 
 
@@ -296,24 +317,21 @@ class PipeMania(Problem):
         das presentes na lista obtida pela execução de
         self.actions(state)."""
         board = state.board.grid
-        for x in len(board):
-            for y in len(board[x]):
+        for x in range(len(board)):
+            for y in range(len(board[x])):
                 if board[x][y][1] == 2:
                     board[x][y] = (board[x][y][0], 0)
         
         board[action[0]][action[1]] = (action[2], 2)
         return PipeManiaState(Board(board))
         
-        
-    def points(self, state:PipeManiaState):
-        pass
 
 
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        if self.count_connections(state) == self.max_connections(state) and self.count_groups(state) == 0:
+        if (self.count_connections(state) == self.max_connections(state)) and self.count_groups(state) == 1:
             return True
         return False
 
@@ -339,6 +357,8 @@ class PipeMania(Problem):
                 if len(possible_pieces) == 1:
                     state.board.grid[row][col] = (possible_pieces[0], 1)  # Lock the piece
                 else: reuse.append((row, col))
+            
+
         
         for row, col in reuse:
             if state.board.get_lock(row, col) == 0:  # If not already locked
@@ -349,7 +369,18 @@ class PipeMania(Problem):
                     
         return state
 
-
+    def preprocess(self, state: PipeManiaState):
+        state = self.fixes_border(state)
+        
+        todo = self.locks(state)
+        while len(todo) > 0:
+            for i in todo:
+                state.board.grid[i[0]][i[1]] = (i[2], 1)
+            todo = self.locks(state)
+            
+        return state
+            
+        
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -362,11 +393,12 @@ class PipeMania(Problem):
 
 if __name__ == "__main__":
     
-    
-    board = Board.parse_instance()
-    problem = PipeMania(board)
-    node = depth_first_tree_search(problem)
-    print(node.state.board, end="")
+    with open('in', 'r') as sys.stdin: 
+        
+        board = Board.parse_instance()
+        problem = PipeMania(board)
+        node = breadth_first_tree_search(problem)
+        print(node.state.board, end="")
     
     # TODO:
     # Ler o ficheiro do standard input,
