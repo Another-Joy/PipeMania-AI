@@ -5,7 +5,7 @@
 # Grupo 00:
 # 00000 Nome1
 # 00000 Nome2
-
+from timeit import default_timer as timer
 import sys
 from search import (
     Problem,
@@ -18,6 +18,8 @@ from search import (
 )
 
 
+
+nodes = 0
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
@@ -45,11 +47,11 @@ class Board:
         
     def get_lock(self, row: int, col: int) -> int:
         if row <0 or col<0:
-            return 1
+            return True
         try:
             return self.grid[row][col][1]
         except:
-            return 1
+            return True
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str): # type: ignore
         """Devolve os valores imediatamente acima e abaixo,
@@ -69,7 +71,7 @@ class Board:
         
         # As linhas subsequentes contêm o grid
         for line in input_lines:
-            grid.append(list((val, 0) for val in line.strip().split("\t")))
+            grid.append(list((val, False) for val in line.strip().split("\t")))
 
         
         # Cria e retorna uma instância de Board
@@ -293,7 +295,6 @@ class PipeMania(Problem):
                         sures.append((x, y, combs[0]))
         return sures
     
-    
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
@@ -306,7 +307,9 @@ class PipeMania(Problem):
                     combs = self.evaluate_combinations(state, x, y)
                     if len(combs) == 1:
                         return [(x, y, combs[0])]
-                    actions.extend((x, y, comb)for comb in combs)
+                    # Only add moves that increase connectivity or are near locked pieces
+                    if any(state.board.get_lock(nx, ny) for nx, ny in [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]):
+                        actions.extend((x, y, comb) for comb in combs)
         return actions
 
 
@@ -316,14 +319,16 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        board = state.board.grid
-        for x in range(len(board)):
-            for y in range(len(board[x])):
-                if board[x][y][1] == 2:
-                    board[x][y] = (board[x][y][0], 0)
+        # Manually copy the current board grid
+        new_grid = [[(cell[0], cell[1]) for cell in row] for row in state.board.grid]
         
-        board[action[0]][action[1]] = (action[2], 2)
-        return PipeManiaState(Board(board))
+        # Apply the action to the copied grid
+        x, y, new_piece = action
+        new_grid[x][y] = (new_piece, True)  # Set the new piece and lock it
+        
+        # Create a new Board and PipeManiaState with the modified grid
+        new_board = Board(new_grid)
+        return PipeManiaState(new_board)
         
 
 
@@ -331,7 +336,9 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        if (self.count_connections(state) == self.max_connections(state)) and self.count_groups(state) == 1:
+        global nodes
+        nodes += 1
+        if self.count_groups(state) == 1:
             return True
         return False
 
@@ -355,18 +362,26 @@ class PipeMania(Problem):
             if state.board.get_lock(row, col) == 0:  # If not already locked
                 possible_pieces = self.evaluate_combinations(state, row, col)
                 if len(possible_pieces) == 1:
-                    state.board.grid[row][col] = (possible_pieces[0], 1)  # Lock the piece
+                    state.board.grid[row][col] = (possible_pieces[0], True)  # Lock the piece
                 else: reuse.append((row, col))
             
 
         
+        rereuse = []
         for row, col in reuse:
             if state.board.get_lock(row, col) == 0:  # If not already locked
                 possible_pieces = self.evaluate_combinations(state, row, col)
                 if len(possible_pieces) == 1:
-                    state.board.grid[row][col] = (possible_pieces[0], 1)  # Lock the piece
-                    
-                    
+                    state.board.grid[row][col] = (possible_pieces[0], True)  # Lock the piece
+                else: rereuse.append((row, col))
+        
+        reuse = []
+        for row, col in reversed(rereuse):            
+            if state.board.get_lock(row, col) == 0:  # If not already locked
+                possible_pieces = self.evaluate_combinations(state, row, col)
+                if len(possible_pieces) == 1:
+                    state.board.grid[row][col] = (possible_pieces[0], True)  # Lock the piece
+
         return state
 
     def preprocess(self, state: PipeManiaState):
@@ -375,30 +390,42 @@ class PipeMania(Problem):
         todo = self.locks(state)
         while len(todo) > 0:
             for i in todo:
-                state.board.grid[i[0]][i[1]] = (i[2], 1)
+                state.board.grid[i[0]][i[1]] = (i[2], True)
             todo = self.locks(state)
+            
             
         return state
             
         
 
-    def h(self, node: Node):
-        """Função heuristica utilizada para a procura A*."""
-        # TODO
-        pass
+    def h(self, node):
+        state = node.state
+        max_con = self.max_connections(state)
+        total_con = self.count_connections(state)
+        group_penalty = self.count_groups(state) - 1
+        return (max_con - total_con) + group_penalty * 10
+    
 
     # TODO: outros metodos da classe
-
-
 
 if __name__ == "__main__":
     
     with open('in', 'r') as sys.stdin: 
         
+        start = timer()
+
+
         board = Board.parse_instance()
+        print(board)
         problem = PipeMania(board)
-        node = breadth_first_tree_search(problem)
+        if problem.goal_test(problem.initial):
+            print(problem.initial.board, end="")
+            print(f"{(timer() - start)*1000} miliseconds")
+            exit()
+        node = depth_first_tree_search(problem)
         print(node.state.board, end="")
+        print(nodes)
+        print(f"{(timer() - start)*1000} miliseconds")
     
     # TODO:
     # Ler o ficheiro do standard input,
